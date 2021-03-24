@@ -1,150 +1,105 @@
 const inquirer = require('inquirer');
 const fs = require('fs');
-const generateMarkdown = require('./generateMarkdown')
-const path = require('path');
+const generateMarkdown = require('./utils/generateMarkdown.js');
 
-console.log('Hello! Create a README for your project by answering the following questions');
+let fileName;
 
-// array of questions for user
-const questions = () => {
-    return inquirer.prompt([{
-            type: 'input',
-            name: 'gitHubUsername',
-            message: 'What is your GitHub username?',
-            validate: nameInput => {
-                if (nameInput) {
-                    return true;
-                } else {
-                    console.log('Please enter your GitHub username.');
-                }
-                return false;
-            }
-        },
-        {
-            type: 'input',
-            name: 'emailAddress',
-            message: 'What is your email address?',
-            validate: nameInput => {
-                if (nameInput) {
-                    return true;
-                } else {
-                    console.log('Please enter your email address.');
-                }
-                return false;
-            }
-        },
+const questions = [
+  {
+    type: 'input',
+    name: 'title',
+    message: 'What is your project title? (Required)',
+    validate: titleInput => {
+      if (titleInput) {
+        return true;
+      } else {
+        console.log('Please enter a title');
+      }
+    }
+  },
+  {
+    type: 'confirm',
+    name: 'confirmDescription',
+    message: 'Would you like to provide a description of your project?',
+    default: true
+  },
+  {
+    type: 'input',
+    name: 'description',
+    message: 'Please describe your applicaiton here:',
+    when: ({ confirmDescription }) => {
+      if (confirmDescription) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  },
+  {
+    type: 'input',
+    name: 'installation',
+    message: 'Please provide instructions for installation:'
+  },
+  {
+    type: 'input',
+    name: 'usage',
+    message: 'Please provide usage instrutions here:'
+  },
+  {
+    type: 'input',
+    name: 'contributing',
+    message: 'Please provide your contribution for your applicaiton:'
+  },
+  {
+    type: 'input',
+    name: 'test',
+    message: 'Please add instructions for testing your application:'
+  },
+  {
+    type: 'list',
+    name: 'license',
+    message: 'What license would you like to install to your application?',
+    choices: ['ISC', 'MIT License', 'Apache License 2.0',],
+  },
+  {
+    type: 'input',
+    name: 'githubName',
+    message: 'Add your GitHub Username?'
+  },
+  {
+    type: 'input',
+    name: 'email',
+    message: 'Please provide your email address (Required):',
+    validate: emailInput => {
+      if (emailInput) {
+        return true;
+      } else {
+        console.log('Please enter your email address!');
+      }
+    }
+  },
+];
 
-        {
-            type: 'input',
-            name: 'titleOfProject',
-            message: 'What is the title of your project?',
-            validate: nameInput => {
-                if (nameInput) {
-                    return true;
-                } else {
-                    console.log('Please enter the title of your project.');
-                }
-                return false;
-            }
-        }, {
-            type: 'input',
-            name: 'projectDescription',
-            message: 'Please write a short description of your project',
-            validate: nameInput => {
-                if (nameInput) {
-                    return true;
-                } else {
-                    console.log('Please enter a description of your project.');
-                }
-                return false;
-            }
-        }, {
-            type: 'checkbox',
-            name: 'licenses',
-            message: 'What kind of license should your project have?',
-            choices: [{
-                    name: 'MIT',
-                },
-                {
-                    name: 'APACHE2.0',
-                },
-                {
-                    name: 'GPL3.0',
-                },
-                {
-                    name: 'BSD3',
-                },
-                {
-                    name: 'None',
-                },
-            ]
-        }, {
-            type: 'input',
-            name: 'commandDependency',
-            message: 'What command should be run to install dependencies?',
-            default: 'npm i',
-            validate: nameInput => {
-                if (nameInput) {
-                    return true;
-                } else {
-                    console.log('Please enter a command.');
-                }
-                return false;
-            }
-        }, {
-            type: 'input',
-            name: 'commandTests',
-            message: 'What command should be run to run tests?',
-            default: 'npm test',
-            validate: nameInput => {
-                if (nameInput) {
-                    return true;
-                } else {
-                    console.log('Please enter a command.');
-                }
-                return false;
-            }
-        }, {
-            type: 'input',
-            name: 'repoInfo',
-            message: 'What does the user need to know about using the repo?',
-            validate: nameInput => {
-                if (nameInput) {
-                    return true;
-                } else {
-                    console.log('Please enter a message to the user.');
-                }
-                return false;
-            }
-        }, {
-            type: 'input',
-            name: 'contributingInfo',
-            message: 'What does the user need to know about contributing to the repo?',
-            validate: nameInput => {
-                if (nameInput) {
-                    return true;
-                } else {
-                    console.log('Please enter instructions for the user.');
-                }
-                return false;
-            }
-        },
-
-    ])
-};
 
 // function to write README file
-function writeToFile(fileName, data) {
-    return fs.writeFileSync(path.join(process.cwd(), fileName), data)
-}
-// function to initialize program
-function init() {
-    questions()
-        .then(answers => {
-            writeToFile('Develop/README.md', generateMarkdown({
-                ...answers
-            }));
-        })
-}
+function writeToFile(file, data) {
+  fs.writeFile(file, generateMarkdown(data), function (err) {
+    if (err) {
+        return console.log(err);
+    } 
+    console.log("README project completed");
+  })
+};
 
+// function to initialize program
+const init = () => {
+  inquirer.prompt(questions)
+    .then(answers => {
+      const generateData = generateMarkdown(answers);
+      writeToFile(fileName, answers);
+    })
+    .catch(err => console.log(err))
+};
+
+// function call to initialize program
 init();
